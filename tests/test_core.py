@@ -57,8 +57,22 @@ class ProposerModelTests(unittest.TestCase):
     def test_model_list_used_for_proposers(self):
         fake, calls = make_fake()
         run("Q?", proposers=["m-a", "m-b"], layers=1, chat_fn=fake)
-        layer1_models = [c["model"] for c in calls[:2]]
-        self.assertEqual(layer1_models, ["m-a", "m-b"])
+        # proposers may run concurrently, so assert the set (order-independent)
+        self.assertEqual({c["model"] for c in calls[:2]}, {"m-a", "m-b"})
+
+    def test_parallel_preserves_response_order(self):
+        def fake(prompt, model=None, temperature=0.7, **kw):
+            return "FINAL" if "Responses from models:" in prompt else f"by-{model}"
+        res = run("Q?", proposers=["m-a", "m-b", "m-c"], layers=1, max_workers=4, chat_fn=fake)
+        self.assertEqual(res.layers[0], ["by-m-a", "by-m-b", "by-m-c"])
+
+    def test_parallel_matches_sequential(self):
+        def fake(prompt, model=None, temperature=0.7, **kw):
+            return "FINAL" if "Responses from models:" in prompt else f"by-{model}"
+        par = run("Q?", proposers=["a", "b"], layers=2, max_workers=4, chat_fn=fake)
+        seq = run("Q?", proposers=["a", "b"], layers=2, max_workers=1, chat_fn=fake)
+        self.assertEqual(par.layers, seq.layers)
+        self.assertEqual(par.final, seq.final)
 
     def test_aggregator_model_used_for_final(self):
         fake, calls = make_fake()

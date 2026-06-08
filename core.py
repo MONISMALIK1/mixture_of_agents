@@ -20,6 +20,7 @@ touch the network, via the injectable ``chat_fn``.
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 
 from .llm import chat
@@ -46,11 +47,17 @@ def _proposer_models(proposers) -> list:
     return models
 
 
-def _propose(prompt, models, chat_fn, default_model, temperature) -> list[str]:
-    return [
-        chat_fn(prompt, model=(m or default_model), temperature=temperature).strip()
-        for m in models
-    ]
+def _propose(prompt, models, chat_fn, default_model, temperature, max_workers) -> list[str]:
+    """Run every proposer on ``prompt``. Proposers are independent, so they run
+    concurrently when ``max_workers > 1``; ``map`` preserves input order, keeping
+    results deterministic regardless of which thread finishes first."""
+    def call(m):
+        return chat_fn(prompt, model=(m or default_model), temperature=temperature).strip()
+
+    if max_workers > 1 and len(models) > 1:
+        with ThreadPoolExecutor(max_workers=min(max_workers, len(models))) as ex:
+            return list(ex.map(call, models))
+    return [call(m) for m in models]
 
 
 def run(
@@ -60,26 +67,28 @@ def run(
     aggregator: str | None = None,
     temperature: float = 0.7,
     model: str | None = None,
+    max_workers: int = 4,
     chat_fn=chat,
 ) -> MoAResult:
     """Run MoA for ``query``.
 
     ``proposers`` is the number of agents per layer (int) or a list of model slugs.
     ``layers`` is the number of proposer layers; ``aggregator`` is the model that
-    produces the final synthesis (defaults to ``model``).
+    produces the final synthesis (defaults to ``model``). ``max_workers`` runs the
+    proposers in a layer concurrently (set to 1 to force sequential).
     """
     if layers < 1:
         raise ValueError("layers must be >= 1")
     models = _proposer_models(proposers)
 
     # Layer 1: answer the raw instruction.
-    current = _propose(query, models, chat_fn, model, temperature)
+    current = _propose(query, models, chat_fn, model, temperature, max_workers)
     trace: list[list[str]] = [current]
 
     # Layers 2..L: each agent refines, given the whole previous layer as context.
     for _ in range(layers - 1):
         ctx = build_aggregate_prompt(query, current)
-        current = _propose(ctx, models, chat_fn, model, temperature)
+        current = _propose(ctx, models, chat_fn, model, temperature, max_workers)
         trace.append(current)
 
     # Final aggregation (greedy).
