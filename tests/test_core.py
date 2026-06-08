@@ -7,7 +7,7 @@ layer's responses, and that the final answer comes from the aggregator.
 
 import unittest
 
-from mixture_of_agents.core import run
+from mixture_of_agents.core import baseline, run
 
 
 def make_fake():
@@ -51,6 +51,21 @@ class StructureTests(unittest.TestCase):
         fake, calls = make_fake()
         run("Q?", proposers=2, layers=1, chat_fn=fake)
         self.assertEqual(calls[-1]["temperature"], 0.0)  # aggregator runs greedy
+
+
+class BaselineTests(unittest.TestCase):
+    def test_baseline_is_a_single_call(self):
+        calls = []
+
+        def fake(prompt, model=None, temperature=0.0, **kw):
+            calls.append((prompt, model, temperature))
+            return "ANSWER"
+
+        out = baseline("Q?", model="m", chat_fn=fake)
+        self.assertEqual(out, "ANSWER")
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][1], "m")
+        self.assertEqual(calls[0][2], 0.0)  # greedy by default
 
 
 class ProposerModelTests(unittest.TestCase):

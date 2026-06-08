@@ -17,7 +17,7 @@ from __future__ import annotations
 
 __version__ = "0.1.0"
 
-from .core import MoAResult, run
+from .core import MoAResult, baseline, run
 from .prompts import build_aggregate_prompt
 
-__all__ = ["__version__", "MoAResult", "run", "build_aggregate_prompt"]
+__all__ = ["__version__", "MoAResult", "run", "baseline", "build_aggregate_prompt"]

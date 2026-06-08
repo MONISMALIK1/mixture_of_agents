@@ -16,7 +16,7 @@ import argparse
 import sys
 
 from . import __version__
-from .core import run
+from .core import baseline, run
 from .llm import DEFAULT_MODEL
 
 
@@ -47,6 +47,8 @@ def main() -> int:
                    help="Proposer sampling temperature for diversity (default: 0.7).")
     p.add_argument("--model", default=None, help=f"Default model (default: {DEFAULT_MODEL}).")
     p.add_argument("--show-trace", action="store_true", help="Print every layer's proposals.")
+    p.add_argument("--baseline", action="store_true",
+                   help="Also print a single-model answer to compare against MoA.")
     args = p.parse_args()
 
     if not args.query:
@@ -63,7 +65,12 @@ def main() -> int:
               aggregator=args.aggregator, temperature=args.temperature, model=args.model)
     if args.show_trace:
         _print_trace(res)
+    if args.baseline:
+        print("=" * 60)
+        print("Single-model baseline:")
+        print(baseline(args.query, model=args.model))
     print("=" * 60)
+    print("Mixture-of-Agents:" if args.baseline else "")
     print(res.final)
     return 0
 

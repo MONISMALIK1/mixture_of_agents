@@ -98,4 +98,10 @@ def run(
     return MoAResult(query=query, final=final, layers=trace, aggregator_model=aggregator)
 
 
-__all__ = ["MoAResult", "run"]
+def baseline(query: str, model: str | None = None, temperature: float = 0.0,
+             chat_fn=chat) -> str:
+    """A single-model answer to the same instruction — the baseline MoA improves on."""
+    return chat_fn(query, model=model, temperature=temperature).strip()
+
+
+__all__ = ["MoAResult", "run", "baseline"]
