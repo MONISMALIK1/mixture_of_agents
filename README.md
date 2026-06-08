@@ -118,6 +118,23 @@ runs greedy, proposer-model routing, and input validation.
   near-identical answers and MoA gains little — use multiple models or a higher
   temperature.
 
+## Part of a series
+
+From-scratch, dependency-free implementations of LLM-reasoning, RAG & algorithm papers:
+[self_consistency](https://github.com/MONISMALIK1/self_consistency) ·
+[tree_of_thoughts](https://github.com/MONISMALIK1/tree_of_thoughts) ·
+[self_discover](https://github.com/MONISMALIK1/self_discover) ·
+[react_agent](https://github.com/MONISMALIK1/react_agent) ·
+[reflexion](https://github.com/MONISMALIK1/reflexion) ·
+[pal](https://github.com/MONISMALIK1/pal) ·
+[chain_of_verification](https://github.com/MONISMALIK1/chain_of_verification) ·
+[self_rag](https://github.com/MONISMALIK1/self_rag) ·
+[corrective_rag](https://github.com/MONISMALIK1/corrective_rag) ·
+[hyde](https://github.com/MONISMALIK1/hyde) ·
+[minhash_lsh](https://github.com/MONISMALIK1/minhash_lsh) ·
+[hyperloglog](https://github.com/MONISMALIK1/hyperloglog) ·
+**mixture_of_agents** (this repo).
+
 ## License
 
 MIT
