@@ -68,7 +68,14 @@ python -m mixture_of_agents "What are the trade-offs of microservices?"
 python -m mixture_of_agents "Design a rate limiter." --layers 3 --show-trace \
   --models "openai/gpt-oss-120b:free,meta-llama/llama-3.1-8b-instruct" \
   --aggregator "openai/gpt-oss-120b:free"
+
+# print a single-model answer next to the MoA answer, to see what aggregation adds
+python -m mixture_of_agents "Summarize the CAP theorem." --baseline
 ```
+
+Proposers within a layer are independent, so they run **concurrently** (a layer of
+N proposers costs ~one round-trip, not N) — `run(..., max_workers=...)`, or `1` to
+force sequential.
 
 As a library:
 
